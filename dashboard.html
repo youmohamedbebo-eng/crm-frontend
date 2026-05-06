@@ -4,19 +4,15 @@
   <title>Y1CRM Dashboard</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
+    * { box-sizing: border-box; font-family: Inter; }
 
     body {
       margin: 0;
-      background: #f4f6fb;
       display: flex;
       height: 100vh;
+      background: #f4f6fb;
     }
 
     /* SIDEBAR */
@@ -28,124 +24,82 @@
     }
 
     .logo {
-      font-size: 18px;
       font-weight: 700;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
 
     .menu div {
       padding: 10px;
-      border-radius: 8px;
       margin-bottom: 8px;
-      cursor: pointer;
       background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .menu div:hover {
+      background: rgba(255,255,255,0.1);
     }
 
     /* MAIN */
     .main {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      padding: 20px;
+      overflow: auto;
     }
 
-    .topbar {
-      background: white;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
+    .section { display: none; }
+    .active { display: block; }
 
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    /* STATS */
+    /* CARDS */
     .stats {
       display: grid;
       grid-template-columns: repeat(4,1fr);
       gap: 10px;
-      padding: 20px;
+      margin-bottom: 20px;
     }
 
     .card {
       background: white;
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .num {
-      font-size: 20px;
-      font-weight: 700;
-      margin-top: 5px;
-    }
-
-    /* ADD */
-    .add-box {
-      padding: 0 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-    }
-
-    /* CHART */
-    .chart-box {
-      padding: 20px;
     }
 
     /* PIPELINE */
     .board {
       display: flex;
       gap: 10px;
-      padding: 20px;
       overflow-x: auto;
     }
 
     .col {
-      min-width: 260px;
+      min-width: 250px;
       background: white;
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 10px;
-      height: 55vh;
+      height: 60vh;
       overflow-y: auto;
     }
 
     .lead {
-      background: #f8fafc;
+      background: #f1f5f9;
       padding: 10px;
-      border-radius: 10px;
       margin: 8px 0;
-      border-left: 4px solid #3b82f6;
-      font-size: 13px;
-      cursor: grab;
-      transition: 0.2s;
+      border-radius: 8px;
     }
 
-    .lead:hover {
-      transform: scale(1.02);
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
-    .small {
-      font-size: 11px;
-      color: #666;
-    }
-
-    .col.dragover {
-      background: #e0f2fe !important;
-      transition: 0.2s;
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
     }
   </style>
 </head>
@@ -155,66 +109,59 @@
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">🚀 Y1CRM</div>
+
   <div class="menu">
-    <div>📊 Dashboard</div>
-    <div>📁 Leads</div>
-    <div>📈 Analytics</div>
-    <div>⚙️ Settings</div>
+    <div onclick="show('dashboard')">📊 Dashboard</div>
+    <div onclick="show('leads')">📁 Leads</div>
+    <div onclick="show('analytics')">📈 Analytics</div>
+    <div onclick="show('settings')">⚙️ Settings</div>
   </div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
-  <div class="topbar">
-    <div>Welcome 👋 <span id="username"></span></div>
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section active">
+
+    <h2>Pipeline</h2>
+
+    <div class="stats">
+      <div class="card">Total <div id="total">0</div></div>
+      <div class="card">Interested <div id="hot">0</div></div>
+      <div class="card">Closed <div id="closed">0</div></div>
+      <div class="card">New <div id="new">0</div></div>
+    </div>
+
+    <div class="board">
+      <div class="col"><h4>New</h4><div id="New"></div></div>
+      <div class="col"><h4>Contacted</h4><div id="Contacted"></div></div>
+      <div class="col"><h4>Interested</h4><div id="Interested"></div></div>
+      <div class="col"><h4>Not Interested</h4><div id="Not Interested"></div></div>
+      <div class="col"><h4>Closed Won</h4><div id="Closed Won"></div></div>
+    </div>
+
+  </div>
+
+  <!-- LEADS -->
+  <div id="leads" class="section">
+    <h2>Leads List</h2>
+    <div id="leadsList"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="analytics" class="section">
+    <h2>Analytics 📊</h2>
+    <p>Total Leads: <span id="a_total">0</span></p>
+    <p>Hot Leads: <span id="a_hot">0</span></p>
+    <p>Closed Leads: <span id="a_closed">0</span></p>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings" class="section">
+    <h2>Settings ⚙️</h2>
+    <p>User: <span id="user"></span></p>
     <button onclick="logout()">Logout</button>
-  </div>
-
-  <!-- STATS -->
-  <div class="stats">
-    <div class="card">Total <div class="num" id="total">0</div></div>
-    <div class="card">New <div class="num" id="new">0</div></div>
-    <div class="card">Interested <div class="num" id="hot">0</div></div>
-    <div class="card">Closed <div class="num" id="closed">0</div></div>
-  </div>
-
-  <!-- CHART -->
-  <div class="chart-box">
-    <canvas id="chart"></canvas>
-  </div>
-
-  <!-- ADD -->
-  <div class="add-box">
-    <h3>Add Lead ➕</h3>
-    <input id="name" placeholder="Name">
-    <input id="phone" placeholder="Phone">
-    <button onclick="addLead()">Add Lead</button>
-  </div>
-
-  <!-- PIPELINE -->
-  <div class="board">
-
-    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'New')">
-      <h4>New</h4><div id="New"></div>
-    </div>
-
-    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Contacted')">
-      <h4>Contacted</h4><div id="Contacted"></div>
-    </div>
-
-    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Interested')">
-      <h4>Interested</h4><div id="Interested"></div>
-    </div>
-
-    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Not Interested')">
-      <h4>Not Interested</h4><div id="Not Interested"></div>
-    </div>
-
-    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Closed Won')">
-      <h4>Closed Won</h4><div id="Closed Won"></div>
-    </div>
-
   </div>
 
 </div>
@@ -226,104 +173,58 @@ const API = "https://crm-backend-svnl.onrender.com";
 let user = JSON.parse(localStorage.getItem("user"));
 let token = localStorage.getItem("token");
 
-if (!user || !token) location.href = "index.html";
+if(!user || !token) location.href = "index.html";
 
-document.getElementById("username").innerText = user.name || "User";
+document.getElementById("user").innerText = user.email;
 
+/* NAV */
+function show(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* LOGOUT */
 function logout(){
   localStorage.clear();
   location.href = "index.html";
 }
 
-/* LOAD */
-function loadLeads() {
-  fetch(API + "/leads", {
-    headers: { Authorization: token }
+/* LOAD LEADS */
+function loadLeads(){
+  fetch(API+"/leads",{
+    headers:{Authorization:token}
   })
-  .then(r => r.json())
-  .then(data => {
+  .then(r=>r.json())
+  .then(data=>{
 
-    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
-      document.getElementById(s).innerHTML = "";
-    });
-
+    // stats
     document.getElementById("total").innerText = data.length;
-    document.getElementById("new").innerText = data.filter(l=>l.status==="New").length;
     document.getElementById("hot").innerText = data.filter(l=>l.status==="Interested").length;
     document.getElementById("closed").innerText = data.filter(l=>l.status==="Closed Won").length;
+    document.getElementById("new").innerText = data.filter(l=>l.status==="New").length;
 
-    // CHART
-    new Chart(document.getElementById("chart"), {
-      type: "doughnut",
-      data: {
-        labels: ["New","Interested","Closed"],
-        datasets: [{
-          data: [
-            data.filter(l=>l.status==="New").length,
-            data.filter(l=>l.status==="Interested").length,
-            data.filter(l=>l.status==="Closed Won").length
-          ]
-        }]
-      }
+    // analytics
+    document.getElementById("a_total").innerText = data.length;
+    document.getElementById("a_hot").innerText = data.filter(l=>l.status==="Interested").length;
+    document.getElementById("a_closed").innerText = data.filter(l=>l.status==="Closed Won").length;
+
+    // pipeline
+    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
+      document.getElementById(s).innerHTML="";
     });
 
-    data.forEach(l => {
-
-      const div = document.createElement("div");
+    data.forEach(l=>{
+      let div = document.createElement("div");
       div.className = "lead";
-      div.draggable = true;
-
-      div.ondragstart = (e)=>{
-        e.dataTransfer.setData("id", l._id);
-      };
-
-      div.innerHTML = `
-        <b>${l.name}</b><br>
-        📞 ${l.phone}<br>
-        <div class="small">${l.status}</div>
-      `;
-
-      const col = document.getElementById(l.status);
-      if(col) col.appendChild(div);
-
+      div.innerHTML = `<b>${l.name}</b><br>${l.phone}`;
+      document.getElementById(l.status)?.appendChild(div);
     });
+
+    // leads page
+    document.getElementById("leadsList").innerHTML =
+      data.map(l=>`<div class="lead">${l.name} - ${l.phone}</div>`).join("");
 
   });
-}
-
-/* ADD */
-function addLead(){
-  fetch(API+"/leads",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:token
-    },
-    body:JSON.stringify({
-      name: document.getElementById("name").value,
-      phone: document.getElementById("phone").value
-    })
-  }).then(()=>loadLeads());
-}
-
-/* DRAG */
-function allowDrop(ev){
-  ev.preventDefault();
-}
-
-function drop(ev, status){
-  ev.preventDefault();
-
-  const id = ev.dataTransfer.getData("id");
-
-  fetch(API+"/leads/"+id,{
-    method:"PUT",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:token
-    },
-    body:JSON.stringify({status})
-  }).then(()=>loadLeads());
 }
 
 loadLeads();
