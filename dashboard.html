@@ -8,16 +8,14 @@
   <style>
     *{box-sizing:border-box;font-family:Inter;margin:0;padding:0}
 
-    body{
-      display:flex;height:100vh;background:#f5f7fb;
-    }
+    body{display:flex;height:100vh;background:#f5f7fb}
 
     /* SIDEBAR */
     .sidebar{
-      width:250px;background:#0f172a;color:white;padding:20px;
+      width:250px;background:#0f172a;color:#fff;padding:20px;
     }
 
-    .logo{font-weight:700;font-size:20px;margin-bottom:20px}
+    .logo{font-size:20px;font-weight:700;margin-bottom:20px}
 
     .menu div{
       padding:10px;margin-bottom:8px;
@@ -29,13 +27,13 @@
     .main{flex:1;overflow:auto}
 
     .topbar{
-      background:white;padding:15px 20px;
+      background:#fff;padding:15px 20px;
       display:flex;justify-content:space-between;
       box-shadow:0 2px 10px rgba(0,0,0,0.05);
     }
 
     button{
-      background:#2563eb;color:white;
+      background:#2563eb;color:#fff;
       border:none;padding:8px 12px;
       border-radius:8px;cursor:pointer;
     }
@@ -48,16 +46,14 @@
     }
 
     .card{
-      background:white;padding:15px;
+      background:#fff;padding:15px;
       border-radius:12px;
     }
 
     .num{font-size:22px;font-weight:700;margin-top:5px}
 
     /* ADD */
-    .add{
-      padding:0 20px;
-    }
+    .add{padding:0 20px}
 
     input{
       width:100%;padding:10px;
@@ -73,7 +69,7 @@
 
     .col{
       min-width:260px;
-      background:white;
+      background:#fff;
       border-radius:10px;
       padding:10px;
       height:60vh;
@@ -94,7 +90,6 @@
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">🚀 Y1CRM</div>
 
@@ -105,7 +100,6 @@
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
   <div class="topbar">
@@ -116,7 +110,6 @@
   <!-- DASHBOARD -->
   <div id="dashboard">
 
-    <!-- STATS -->
     <div class="stats">
       <div class="card">Total<div class="num" id="total">0</div></div>
       <div class="card">Hot<div class="num" id="hot">0</div></div>
@@ -124,17 +117,13 @@
       <div class="card">New<div class="num" id="new">0</div></div>
     </div>
 
-    <!-- ADD LEAD (FIXED 100%) -->
     <div class="add">
       <h3>Add Lead ➕</h3>
-
       <input id="name" placeholder="Name">
       <input id="phone" placeholder="Phone">
-
       <button onclick="addLead()">Add Lead</button>
     </div>
 
-    <!-- PIPELINE -->
     <div class="board">
 
       <div class="col" ondrop="drop(event,'New')" ondragover="allowDrop(event)">
@@ -158,15 +147,14 @@
       </div>
 
     </div>
-
   </div>
 
   <!-- ANALYTICS -->
   <div id="analytics" style="display:none;padding:20px">
     <h2>Analytics</h2>
-    <p>Total: <span id="a_total"></span></p>
-    <p>Hot: <span id="a_hot"></span></p>
-    <p>Closed: <span id="a_closed"></span></p>
+    <p>Total: <span id="a_total">0</span></p>
+    <p>Hot: <span id="a_hot">0</span></p>
+    <p>Closed: <span id="a_closed">0</span></p>
   </div>
 
   <!-- SETTINGS -->
@@ -209,13 +197,16 @@ function load(){
   .then(r=>r.json())
   .then(data=>{
 
+    if(!Array.isArray(data)) return;
+
     document.getElementById("total").innerText=data.length;
     document.getElementById("hot").innerText=data.filter(l=>l.status==="Interested").length;
     document.getElementById("closed").innerText=data.filter(l=>l.status==="Closed Won").length;
     document.getElementById("new").innerText=data.filter(l=>l.status==="New").length;
 
     ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
-      document.getElementById(s).innerHTML="";
+      const el=document.getElementById(s);
+      if(el) el.innerHTML="";
     });
 
     data.forEach(l=>{
@@ -227,7 +218,7 @@ function load(){
         e.dataTransfer.setData("id",l._id);
       };
 
-      div.innerHTML=`${l.name}<br>${l.phone}`;
+      div.innerHTML=`<b>${l.name || ""}</b><br>${l.phone || ""}`;
 
       document.getElementById(l.status)?.appendChild(div);
     });
@@ -239,7 +230,7 @@ function load(){
   });
 }
 
-/* ADD LEAD (FIXED 100%) */
+/* ADD */
 function addLead(){
 
   const name=document.getElementById("name");
@@ -261,8 +252,7 @@ function addLead(){
       phone:phone.value
     })
   })
-  .then(r=>r.json())
-  .then(()=>{
+  .then(()=> {
     name.value="";
     phone.value="";
     load();
