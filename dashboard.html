@@ -1,22 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Y1CRM Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #f4f6f9;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .container {
+      padding: 15px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .card {
+      flex: 1;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .board {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+    }
+
+    .col {
+      min-width: 260px;
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      height: 70vh;
+      overflow-y: auto;
+    }
+
+    .lead {
+      background: #f9fafb;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div>🚀 Y1CRM</div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+<!-- STATS -->
+<div class="stats">
+  <div class="card">Total <div id="total">0</div></div>
+  <div class="card">Interested <div id="interested">0</div></div>
+  <div class="card">Closed <div id="closed">0</div></div>
+</div>
+
+<!-- ADD LEAD -->
+<h3>Add Lead ➕</h3>
+<input id="name" placeholder="Name">
+<input id="phone" placeholder="Phone">
+<button onclick="addLead()">Add</button>
+
+<hr>
+
+<!-- PIPELINE -->
+<div class="board">
+
+  <div class="col">
+    <h3>New</h3>
+    <div id="New"></div>
+  </div>
+
+  <div class="col">
+    <h3>Contacted</h3>
+    <div id="Contacted"></div>
+  </div>
+
+  <div class="col">
+    <h3>Interested</h3>
+    <div id="Interested"></div>
+  </div>
+
+  <div class="col">
+    <h3>Not Interested</h3>
+    <div id="Not Interested"></div>
+  </div>
+
+  <div class="col">
+    <h3>Closed Won</h3>
+    <div id="Closed Won"></div>
+  </div>
+
+</div>
+
+</div>
+
 <script>
 
 const API = "https://crm-backend-svnl.onrender.com";
 
-let user = null;
-let token = null;
-
-try {
-  user = JSON.parse(localStorage.getItem("user"));
-  token = localStorage.getItem("token");
-} catch (e) {}
+let user = JSON.parse(localStorage.getItem("user"));
+let token = localStorage.getItem("token");
 
 if (!user || !token) {
   location.href = "index.html";
-}
-
-const usernameEl = document.getElementById("username");
-if (usernameEl) {
-  usernameEl.innerText = user?.name || "User";
 }
 
 function logout(){
@@ -24,33 +151,21 @@ function logout(){
   location.href = "index.html";
 }
 
-/* LOAD */
+/* LOAD LEADS */
 function loadLeads() {
   fetch(API + "/leads", {
     headers: { Authorization: token }
   })
-  .then(r => r.json())
+  .then(res => res.json())
   .then(data => {
 
-    if (!Array.isArray(data)) {
-      console.log("API error:", data);
-      return;
-    }
-
-    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
-      const el = document.getElementById(s);
-      if (el) el.innerHTML = "";
+    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s => {
+      document.getElementById(s).innerHTML = "";
     });
 
-    const total = document.getElementById("total");
-    const interested = document.getElementById("interested");
-    const closed = document.getElementById("closed");
-    const newC = document.getElementById("new");
-
-    if (total) total.innerText = data.length;
-    if (interested) interested.innerText = data.filter(l=>l.status==="Interested").length;
-    if (closed) closed.innerText = data.filter(l=>l.status==="Closed Won").length;
-    if (newC) newC.innerText = data.filter(l=>l.status==="New").length;
+    document.getElementById("total").innerText = data.length;
+    document.getElementById("interested").innerText = data.filter(l => l.status==="Interested").length;
+    document.getElementById("closed").innerText = data.filter(l => l.status==="Closed Won").length;
 
     data.forEach(l => {
 
@@ -59,9 +174,9 @@ function loadLeads() {
 
       div.innerHTML = `
         <b>${l.name || ""}</b><br>
-        📞 ${l.phone || ""}<br><br>
+        📞 ${l.phone || ""}<br>
 
-        <select onchange="updateStatus('${l._id}',this.value)">
+        <select onchange="updateStatus('${l._id}', this.value)">
           <option ${l.status==="New"?"selected":""}>New</option>
           <option ${l.status==="Contacted"?"selected":""}>Contacted</option>
           <option ${l.status==="Interested"?"selected":""}>Interested</option>
@@ -71,62 +186,45 @@ function loadLeads() {
       `;
 
       const col = document.getElementById(l.status);
-      if(col) col.appendChild(div);
-
+      if (col) col.appendChild(div);
     });
 
   })
-  .catch(err => {
-    console.log("Fetch error:", err);
-  });
+  .catch(err => console.log(err));
 }
 
-/* ADD */
+/* ADD LEAD */
 function addLead(){
-  const nameInput = document.getElementById("name");
-  const phoneInput = document.getElementById("phone");
-
-  if(!nameInput || !phoneInput) return;
-
-  if(!nameInput.value || !phoneInput.value){
-    alert("Please enter name and phone");
-    return;
-  }
-
-  fetch(API+"/leads",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:token
+  fetch(API + "/leads", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token
     },
-    body:JSON.stringify({
-      name: nameInput.value,
-      phone: phoneInput.value
+    body: JSON.stringify({
+      name: document.getElementById("name").value,
+      phone: document.getElementById("phone").value
     })
   })
-  .then(r => r.json())
-  .then(() => {
-    nameInput.value = "";
-    phoneInput.value = "";
-    loadLeads();
-  })
-  .catch(err => console.log(err));
+  .then(() => loadLeads());
 }
 
-/* UPDATE */
-function updateStatus(id,status){
-  fetch(API+"/leads/"+id,{
-    method:"PUT",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:token
+/* UPDATE STATUS */
+function updateStatus(id, status){
+  fetch(API + "/leads/" + id, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token
     },
-    body:JSON.stringify({status})
+    body: JSON.stringify({ status })
   })
-  .then(loadLeads)
-  .catch(err => console.log(err));
+  .then(() => loadLeads());
 }
 
 loadLeads();
 
 </script>
+
+</body>
+</html>
