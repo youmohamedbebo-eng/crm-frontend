@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>CRM Dashboard</title>
 </head>
 <body>
 
@@ -9,7 +9,6 @@
 let user = JSON.parse(localStorage.getItem("user"));
 let token = localStorage.getItem("token");
 
-// حماية الدخول
 if (!user || !token) {
   window.location.href = "index.html";
 }
@@ -58,12 +57,11 @@ function loadLeads() {
     }
   })
   .then(res => {
-    if (res.status === 401) {
-      throw new Error("Unauthorized");
-    }
+    if (res.status === 401) throw new Error("Unauthorized");
     return res.json();
   })
   .then(data => {
+
     let rows = "";
 
     data.forEach(l => {
@@ -71,10 +69,21 @@ function loadLeads() {
         <tr>
           <td>${l.name || "-"}</td>
           <td>${l.phone || "-"}</td>
-          <td>${l.status || "-"}</td>
+
+          <!-- 🟢 STATUS DROPDOWN -->
           <td>
-            <button onclick="deleteLead('${l._id}')">Delete ❌</button>
-            <button onclick="markDone('${l._id}')">Done ✔</button>
+            <select onchange="updateStatus('${l._id}', this.value)">
+              <option value="New" ${l.status === "New" ? "selected" : ""}>New</option>
+              <option value="Contacted" ${l.status === "Contacted" ? "selected" : ""}>Contacted</option>
+              <option value="Interested" ${l.status === "Interested" ? "selected" : ""}>Interested</option>
+              <option value="Not Interested" ${l.status === "Not Interested" ? "selected" : ""}>Not Interested</option>
+              <option value="Follow Up" ${l.status === "Follow Up" ? "selected" : ""}>Follow Up</option>
+              <option value="Closed Won" ${l.status === "Closed Won" ? "selected" : ""}>Closed Won</option>
+            </select>
+          </td>
+
+          <td>
+            <button onclick="deleteLead('${l._id}')">❌ Delete</button>
           </td>
         </tr>
       `;
@@ -105,17 +114,13 @@ function addLead() {
       status: "New"
     })
   })
-  .then(res => res.json())
   .then(() => {
     document.getElementById("msg").innerText = "✔ Lead Added Successfully";
 
-    document.getElementById("name").value = "";
-    document.getElementById("phone").value = "";
+    name.value = "";
+    phone.value = "";
 
     loadLeads();
-  })
-  .catch(() => {
-    document.getElementById("msg").innerText = "❌ Error adding lead";
   });
 }
 
@@ -128,25 +133,21 @@ function deleteLead(id) {
     headers: {
       "Authorization": token
     }
-  })
-  .then(() => loadLeads());
+  }).then(loadLeads);
 }
 
 /* =======================
-   MARK AS DONE
+   UPDATE STATUS
 ======================= */
-function markDone(id) {
+function updateStatus(id, status) {
   fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       "Authorization": token
     },
-    body: JSON.stringify({
-      status: "Done"
-    })
-  })
-  .then(() => loadLeads());
+    body: JSON.stringify({ status })
+  }).then(loadLeads);
 }
 
 </script>
