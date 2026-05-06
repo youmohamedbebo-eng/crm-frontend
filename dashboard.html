@@ -91,9 +91,7 @@
   <div class="logo">🚀 Y1CRM</div>
 
   <div class="menu">
-    <div onclick="show('dashboard')">📊 Dashboard</div>
-    <div onclick="show('analytics')">📈 Analytics</div>
-    <div onclick="show('settings')">⚙️ Settings</div>
+    <div>📊 Dashboard</div>
   </div>
 </div>
 
@@ -104,7 +102,6 @@
     <button onclick="logout()">Logout</button>
   </div>
 
-  <!-- DASHBOARD -->
   <div id="dashboard">
 
     <div class="stats">
@@ -159,11 +156,6 @@ if(!user||!token) location.href="index.html";
 
 document.getElementById("user").innerText=user.name || "User";
 
-/* NAV */
-function show(x){
-  document.getElementById("dashboard").style.display="block";
-}
-
 /* LOGOUT */
 function logout(){
   localStorage.clear();
@@ -173,11 +165,16 @@ function logout(){
 /* LOAD */
 function load(){
 
-  fetch(API+"/leads",{headers:{Authorization:token}})
+  fetch(API+"/leads",{
+    headers:{ Authorization: "Bearer " + token }
+  })
   .then(r=>r.json())
   .then(data=>{
 
-    if(!Array.isArray(data)) return;
+    if(!Array.isArray(data)){
+      console.log("ERROR:",data);
+      return;
+    }
 
     ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
       document.getElementById(s).innerHTML="";
@@ -203,12 +200,10 @@ function load(){
         📞 ${l.phone || ""}
       `;
 
-      const col=document.getElementById(l.status);
-      if(col) col.appendChild(div);
+      document.getElementById(l.status)?.appendChild(div);
     });
 
-  })
-  .catch(err=>console.log("LOAD ERROR:",err));
+  });
 }
 
 /* ADD */
@@ -226,7 +221,7 @@ function addLead(){
     method:"POST",
     headers:{
       "Content-Type":"application/json",
-      Authorization:token
+      Authorization: "Bearer " + token
     },
     body:JSON.stringify({
       name:name.value,
@@ -251,22 +246,15 @@ function drop(e,status){
 
   const id=e.dataTransfer.getData("id");
 
-  if(!id){
-    alert("No lead selected");
-    return;
-  }
-
   fetch(API+"/leads/"+id,{
     method:"PUT",
     headers:{
       "Content-Type":"application/json",
-      Authorization:token
+      Authorization: "Bearer " + token
     },
     body:JSON.stringify({status})
   })
-  .then(res=>res.json())
-  .then(()=>load())
-  .catch(err=>console.log("DROP ERROR:",err));
+  .then(()=>load());
 }
 
 load();
