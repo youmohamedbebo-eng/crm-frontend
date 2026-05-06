@@ -4,6 +4,9 @@
   <title>CRM Dashboard</title>
 </head>
 <body>
+  
+let user = JSON.parse(localStorage.getItem("user"));
+if (!user) window.location.href = "login.html";
 
 <h1>CRM Leads Dashboard 🚀</h1>
 
