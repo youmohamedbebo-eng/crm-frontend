@@ -12,6 +12,19 @@ if (!user) window.location.href = "index.html";
 
 <h1>CRM Leads 🚀</h1>
 
+<!-- 🟢 Add Lead Form -->
+<h2>Add Lead ➕</h2>
+
+<input id="name" placeholder="Name"><br><br>
+<input id="phone" placeholder="Phone"><br><br>
+
+<button onclick="addLead()">Add Lead</button>
+
+<p id="msg"></p>
+
+<hr>
+
+<!-- 🟢 Load Leads -->
 <button onclick="loadLeads()">Load Leads</button>
 
 <table border="1">
@@ -26,6 +39,9 @@ if (!user) window.location.href = "index.html";
 </table>
 
 <script>
+/* =======================
+   LOAD LEADS
+======================= */
 function loadLeads() {
   fetch("https://crm-backend-svnl.onrender.com/leads?user=" + user.email)
   .then(res => res.json())
@@ -36,11 +52,39 @@ function loadLeads() {
         <tr>
           <td>${l.name || "-"}</td>
           <td>${l.phone || "-"}</td>
-          <td>${l.status}</td>
+          <td>${l.status || "-"}</td>
         </tr>
       `;
     });
     document.getElementById("data").innerHTML = rows;
+  });
+}
+
+/* =======================
+   ADD LEAD
+======================= */
+function addLead() {
+  fetch("https://crm-backend-svnl.onrender.com/leads", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name: document.getElementById("name").value,
+      phone: document.getElementById("phone").value,
+      status: "New",
+      assignedTo: user.email
+    })
+  })
+  .then(res => res.json())
+  .then(() => {
+    document.getElementById("msg").innerText = "✔ Lead Added Successfully";
+
+    // refresh list automatically
+    loadLeads();
+  })
+  .catch(() => {
+    document.getElementById("msg").innerText = "❌ Error adding lead";
   });
 }
 </script>
