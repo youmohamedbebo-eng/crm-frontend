@@ -2,12 +2,22 @@
 
 const API = "https://crm-backend-svnl.onrender.com";
 
-let user = JSON.parse(localStorage.getItem("user"));
-let token = localStorage.getItem("token");
+let user = null;
+let token = null;
 
-if (!user || !token) location.href = "index.html";
+try {
+  user = JSON.parse(localStorage.getItem("user"));
+  token = localStorage.getItem("token");
+} catch (e) {}
 
-document.getElementById("username").innerText = user.name || "User";
+if (!user || !token) {
+  location.href = "index.html";
+}
+
+const usernameEl = document.getElementById("username");
+if (usernameEl) {
+  usernameEl.innerText = user?.name || "User";
+}
 
 function logout(){
   localStorage.clear();
@@ -22,14 +32,25 @@ function loadLeads() {
   .then(r => r.json())
   .then(data => {
 
+    if (!Array.isArray(data)) {
+      console.log("API error:", data);
+      return;
+    }
+
     ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
-      document.getElementById(s).innerHTML = "";
+      const el = document.getElementById(s);
+      if (el) el.innerHTML = "";
     });
 
-    document.getElementById("total").innerText = data.length;
-    document.getElementById("interested").innerText = data.filter(l=>l.status==="Interested").length;
-    document.getElementById("closed").innerText = data.filter(l=>l.status==="Closed Won").length;
-    document.getElementById("new").innerText = data.filter(l=>l.status==="New").length;
+    const total = document.getElementById("total");
+    const interested = document.getElementById("interested");
+    const closed = document.getElementById("closed");
+    const newC = document.getElementById("new");
+
+    if (total) total.innerText = data.length;
+    if (interested) interested.innerText = data.filter(l=>l.status==="Interested").length;
+    if (closed) closed.innerText = data.filter(l=>l.status==="Closed Won").length;
+    if (newC) newC.innerText = data.filter(l=>l.status==="New").length;
 
     data.forEach(l => {
 
@@ -37,8 +58,8 @@ function loadLeads() {
       div.className = "lead";
 
       div.innerHTML = `
-        <b>${l.name}</b><br>
-        📞 ${l.phone}<br><br>
+        <b>${l.name || ""}</b><br>
+        📞 ${l.phone || ""}<br><br>
 
         <select onchange="updateStatus('${l._id}',this.value)">
           <option ${l.status==="New"?"selected":""}>New</option>
@@ -54,13 +75,18 @@ function loadLeads() {
 
     });
 
+  })
+  .catch(err => {
+    console.log("Fetch error:", err);
   });
 }
 
-/* ADD (FIXED 🔥) */
+/* ADD */
 function addLead(){
   const nameInput = document.getElementById("name");
   const phoneInput = document.getElementById("phone");
+
+  if(!nameInput || !phoneInput) return;
 
   if(!nameInput.value || !phoneInput.value){
     alert("Please enter name and phone");
@@ -78,12 +104,13 @@ function addLead(){
       phone: phoneInput.value
     })
   })
-  .then(res => res.json())
+  .then(r => r.json())
   .then(() => {
     nameInput.value = "";
     phoneInput.value = "";
     loadLeads();
-  });
+  })
+  .catch(err => console.log(err));
 }
 
 /* UPDATE */
@@ -95,7 +122,9 @@ function updateStatus(id,status){
       Authorization:token
     },
     body:JSON.stringify({status})
-  }).then(loadLeads);
+  })
+  .then(loadLeads)
+  .catch(err => console.log(err));
 }
 
 loadLeads();
