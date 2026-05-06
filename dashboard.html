@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CRM SaaS Pro Max</title>
+  <title>Y1CRM - SaaS Dashboard</title>
 
   <style>
     body {
@@ -17,6 +17,11 @@
       display:flex;
       justify-content:space-between;
       align-items:center;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 18px;
     }
 
     .container {
@@ -87,7 +92,7 @@
 <body>
 
 <header>
-  <div>🚀 CRM SaaS Pro Max</div>
+  <div class="brand">🚀 Y1CRM</div>
   <button onclick="logout()">Logout</button>
 </header>
 
@@ -162,12 +167,10 @@ function loadLeads() {
   .then(r => r.json())
   .then(data => {
 
-    // reset columns
     ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
       document.getElementById(s).innerHTML = "";
     });
 
-    // stats
     document.getElementById("total").innerText = data.length;
     document.getElementById("new").innerText = data.filter(l=>l.status==="New").length;
     document.getElementById("hot").innerText = data.filter(l=>l.status==="Interested").length;
