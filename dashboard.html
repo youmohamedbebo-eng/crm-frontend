@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Y1CRM Pro</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -10,7 +9,6 @@
 
     body{display:flex;height:100vh;background:#f5f7fb}
 
-    /* SIDEBAR */
     .sidebar{
       width:250px;background:#0f172a;color:#fff;padding:20px;
     }
@@ -23,7 +21,6 @@
       border-radius:8px;cursor:pointer;
     }
 
-    /* MAIN */
     .main{flex:1;overflow:auto}
 
     .topbar{
@@ -38,7 +35,6 @@
       border-radius:8px;cursor:pointer;
     }
 
-    /* STATS */
     .stats{
       display:grid;
       grid-template-columns:repeat(4,1fr);
@@ -52,7 +48,6 @@
 
     .num{font-size:22px;font-weight:700;margin-top:5px}
 
-    /* ADD */
     .add{padding:0 20px}
 
     input{
@@ -61,7 +56,6 @@
       border:1px solid #ddd;
     }
 
-    /* PIPELINE */
     .board{
       display:flex;gap:10px;
       padding:20px;overflow-x:auto;
@@ -85,6 +79,9 @@
       cursor:grab;
     }
 
+    .col.dragover{
+      background:#e0f2fe;
+    }
   </style>
 </head>
 
@@ -149,20 +146,6 @@
     </div>
   </div>
 
-  <!-- ANALYTICS -->
-  <div id="analytics" style="display:none;padding:20px">
-    <h2>Analytics</h2>
-    <p>Total: <span id="a_total">0</span></p>
-    <p>Hot: <span id="a_hot">0</span></p>
-    <p>Closed: <span id="a_closed">0</span></p>
-  </div>
-
-  <!-- SETTINGS -->
-  <div id="settings" style="display:none;padding:20px">
-    <h2>Settings</h2>
-    <p>User: <span id="email"></span></p>
-  </div>
-
 </div>
 
 <script>
@@ -174,15 +157,11 @@ let token=localStorage.getItem("token");
 
 if(!user||!token) location.href="index.html";
 
-document.getElementById("user").innerText=user.name;
-document.getElementById("email").innerText=user.email;
+document.getElementById("user").innerText=user.name || "User";
 
 /* NAV */
 function show(x){
-  ["dashboard","analytics","settings"].forEach(i=>{
-    document.getElementById(i).style.display="none";
-  });
-  document.getElementById(x).style.display="block";
+  document.getElementById("dashboard").style.display="block";
 }
 
 /* LOGOUT */
@@ -193,24 +172,25 @@ function logout(){
 
 /* LOAD */
 function load(){
+
   fetch(API+"/leads",{headers:{Authorization:token}})
   .then(r=>r.json())
   .then(data=>{
 
     if(!Array.isArray(data)) return;
 
+    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
+      document.getElementById(s).innerHTML="";
+    });
+
     document.getElementById("total").innerText=data.length;
     document.getElementById("hot").innerText=data.filter(l=>l.status==="Interested").length;
     document.getElementById("closed").innerText=data.filter(l=>l.status==="Closed Won").length;
     document.getElementById("new").innerText=data.filter(l=>l.status==="New").length;
 
-    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
-      const el=document.getElementById(s);
-      if(el) el.innerHTML="";
-    });
-
     data.forEach(l=>{
-      let div=document.createElement("div");
+
+      const div=document.createElement("div");
       div.className="lead";
       div.draggable=true;
 
@@ -218,16 +198,17 @@ function load(){
         e.dataTransfer.setData("id",l._id);
       };
 
-      div.innerHTML=`<b>${l.name || ""}</b><br>${l.phone || ""}`;
+      div.innerHTML=`
+        <b>${l.name || ""}</b><br>
+        📞 ${l.phone || ""}
+      `;
 
-      document.getElementById(l.status)?.appendChild(div);
+      const col=document.getElementById(l.status);
+      if(col) col.appendChild(div);
     });
 
-    document.getElementById("a_total").innerText=data.length;
-    document.getElementById("a_hot").innerText=data.filter(l=>l.status==="Interested").length;
-    document.getElementById("a_closed").innerText=data.filter(l=>l.status==="Closed Won").length;
-
-  });
+  })
+  .catch(err=>console.log("LOAD ERROR:",err));
 }
 
 /* ADD */
@@ -237,7 +218,7 @@ function addLead(){
   const phone=document.getElementById("phone");
 
   if(!name.value || !phone.value){
-    alert("Enter name + phone");
+    alert("Enter data");
     return;
   }
 
@@ -260,10 +241,20 @@ function addLead(){
 }
 
 /* DRAG */
-function allowDrop(e){e.preventDefault();}
+function allowDrop(e){
+  e.preventDefault();
+}
 
 function drop(e,status){
-  let id=e.dataTransfer.getData("id");
+
+  e.preventDefault();
+
+  const id=e.dataTransfer.getData("id");
+
+  if(!id){
+    alert("No lead selected");
+    return;
+  }
 
   fetch(API+"/leads/"+id,{
     method:"PUT",
@@ -272,7 +263,10 @@ function drop(e,status){
       Authorization:token
     },
     body:JSON.stringify({status})
-  }).then(load);
+  })
+  .then(res=>res.json())
+  .then(()=>load())
+  .catch(err=>console.log("DROP ERROR:",err));
 }
 
 load();
