@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CRM Dashboard</title>
+  <title>CRM SaaS Dashboard</title>
 </head>
 <body>
 
@@ -14,20 +14,20 @@ if (!user || !token) {
 }
 </script>
 
-<h1>CRM Leads 🚀</h1>
+<h1>🚀 CRM SaaS Pipeline</h1>
 
 <!-- 🟢 STATS -->
-<div style="display:flex; gap:10px; margin-bottom:15px;">
+<div style="display:flex; gap:15px; margin-bottom:20px;">
   <div id="total">Total: 0</div>
   <div id="new">New: 0</div>
-  <div id="interested">Interested: 0</div>
-  <div id="done">Closed: 0</div>
+  <div id="hot">Interested: 0</div>
+  <div id="won">Closed: 0</div>
 </div>
 
 <hr>
 
 <!-- 🟢 ADD LEAD -->
-<h2>Add Lead ➕</h2>
+<h2>➕ Add Lead</h2>
 
 <input id="name" placeholder="Name"><br><br>
 <input id="phone" placeholder="Phone"><br><br>
@@ -38,22 +38,35 @@ if (!user || !token) {
 
 <hr>
 
-<!-- 🟢 LOAD -->
-<button onclick="loadLeads()">Load Leads</button>
+<!-- 🟢 PIPELINE (KANBAN) -->
+<div style="display:flex; gap:10px; align-items:flex-start;">
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Phone</th>
-      <th>Status</th>
-      <th>Notes</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
+  <div style="flex:1">
+    <h3>🆕 New</h3>
+    <div id="New"></div>
+  </div>
 
-  <tbody id="data"></tbody>
-</table>
+  <div style="flex:1">
+    <h3>📞 Contacted</h3>
+    <div id="Contacted"></div>
+  </div>
+
+  <div style="flex:1">
+    <h3>🔥 Interested</h3>
+    <div id="Interested"></div>
+  </div>
+
+  <div style="flex:1">
+    <h3>❌ Not Interested</h3>
+    <div id="Not Interested"></div>
+  </div>
+
+  <div style="flex:1">
+    <h3>🏆 Closed Won</h3>
+    <div id="Closed Won"></div>
+  </div>
+
+</div>
 
 <script>
 
@@ -67,51 +80,58 @@ function loadLeads() {
   .then(res => res.json())
   .then(data => {
 
-    // 🔥 STATS
-    document.getElementById("total").innerText = "Total: " + data.length;
-    document.getElementById("new").innerText = "New: " + data.filter(l => l.status === "New").length;
-    document.getElementById("interested").innerText = "Interested: " + data.filter(l => l.status === "Interested").length;
-    document.getElementById("done").innerText = "Closed: " + data.filter(l => l.status === "Closed Won").length;
-
-    let rows = "";
-
-    data.forEach(l => {
-      rows += `
-        <tr>
-          <td>${l.name || "-"}</td>
-          <td>${l.phone || "-"}</td>
-
-          <!-- STATUS -->
-          <td>
-            <select onchange="updateStatus('${l._id}', this.value)">
-              <option value="New" ${l.status === "New" ? "selected" : ""}>New</option>
-              <option value="Contacted" ${l.status === "Contacted" ? "selected" : ""}>Contacted</option>
-              <option value="Interested" ${l.status === "Interested" ? "selected" : ""}>Interested</option>
-              <option value="Not Interested" ${l.status === "Not Interested" ? "selected" : ""}>Not Interested</option>
-              <option value="Follow Up" ${l.status === "Follow Up" ? "selected" : ""}>Follow Up</option>
-              <option value="Closed Won" ${l.status === "Closed Won" ? "selected" : ""}>Closed Won</option>
-            </select>
-          </td>
-
-          <!-- 🟢 NOTES -->
-          <td>
-            <input id="note-${l._id}" placeholder="Add note">
-            <button onclick="addNote('${l._id}')">Save</button>
-
-            <div style="font-size:12px; margin-top:5px;">
-              ${l.notes?.map(n => "📝 " + n.text).join("<br>") || ""}
-            </div>
-          </td>
-
-          <!-- ACTIONS -->
-          <td>
-            <button onclick="deleteLead('${l._id}')">❌</button>
-          </td>
-        </tr>
-      `;
+    // 🟢 RESET COLUMNS
+    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s => {
+      document.getElementById(s).innerHTML = "";
     });
 
-    document.getElementById("data").innerHTML = rows;
+    // 🟢 STATS
+    document.getElementById("total").innerText = "Total: " + data.length;
+    document.getElementById("new").innerText = "New: " + data.filter(l => l.status === "New").length;
+    document.getElementById("hot").innerText = "Interested: " + data.filter(l => l.status === "Interested").length;
+    document.getElementById("won").innerText = "Closed: " + data.filter(l => l.status === "Closed Won").length;
+
+    data.forEach(l => {
+
+      const card = `
+        <div style="
+          background:#f5f5f5;
+          padding:10px;
+          margin:5px;
+          border-radius:8px;
+          font-size:14px;
+        ">
+          <b>${l.name}</b><br>
+          📞 ${l.phone}<br><br>
+
+          <select onchange="updateStatus('${l._id}', this.value)">
+            <option ${l.status==="New"?"selected":""}>New</option>
+            <option ${l.status==="Contacted"?"selected":""}>Contacted</option>
+            <option ${l.status==="Interested"?"selected":""}>Interested</option>
+            <option ${l.status==="Not Interested"?"selected":""}>Not Interested</option>
+            <option ${l.status==="Closed Won"?"selected":""}>Closed Won</option>
+          </select>
+
+          <br><br>
+
+          <input id="note-${l._id}" placeholder="Add note">
+          <button onclick="addNote('${l._id}')">💾</button>
+
+          <div style="font-size:12px; margin-top:5px;">
+            ${l.notes?.map(n => "📝 " + n.text).join("<br>") || ""}
+          </div>
+
+          <br>
+          <button onclick="deleteLead('${l._id}')">❌ Delete</button>
+        </div>
+      `;
+
+      if (document.getElementById(l.status)) {
+        document.getElementById(l.status).innerHTML += card;
+      }
+
+    });
+
   });
 }
 
@@ -130,21 +150,10 @@ function addLead() {
       phone: phone.value,
       status: "New"
     })
-  })
-  .then(() => {
+  }).then(() => {
     msg.innerText = "✔ Added";
     loadLeads();
   });
-}
-
-/* =======================
-   DELETE
-======================= */
-function deleteLead(id) {
-  fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
-    method: "DELETE",
-    headers: { "Authorization": token }
-  }).then(loadLeads);
 }
 
 /* =======================
@@ -158,6 +167,16 @@ function updateStatus(id, status) {
       "Authorization": token
     },
     body: JSON.stringify({ status })
+  }).then(loadLeads);
+}
+
+/* =======================
+   DELETE
+======================= */
+function deleteLead(id) {
+  fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
+    method: "DELETE",
+    headers: { "Authorization": token }
   }).then(loadLeads);
 }
 
