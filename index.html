@@ -3,96 +3,155 @@
 <head>
   <title>Y1CRM Login</title>
 
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     body {
-      font-family: Arial;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      display: flex;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
       height: 100vh;
+      display: flex;
+    }
+
+    /* LEFT SIDE */
+    .left {
+      flex: 1;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: white;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
-      align-items: center;
+      padding: 60px;
+    }
+
+    .left h1 {
+      font-size: 42px;
       margin: 0;
     }
 
-    .box {
+    .left p {
+      margin-top: 15px;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+
+    .badge {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.1);
+      padding: 10px 15px;
+      display: inline-block;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    /* RIGHT SIDE */
+    .right {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f8fafc;
+    }
+
+    .card {
+      width: 360px;
       background: white;
       padding: 30px;
-      border-radius: 12px;
-      width: 320px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      text-align: center;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
     }
 
     .logo {
+      font-weight: 700;
       font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 15px;
-      color: #0f172a;
+      margin-bottom: 20px;
+      color: #1e293b;
     }
 
     input {
       width: 100%;
       padding: 12px;
       margin: 8px 0;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
       outline: none;
+      font-size: 14px;
     }
 
     input:focus {
       border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
     }
 
     button {
       width: 100%;
       padding: 12px;
-      background: #3b82f6;
+      margin-top: 12px;
+      background: #2563eb;
       color: white;
       border: none;
+      border-radius: 10px;
+      font-weight: 600;
       cursor: pointer;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-weight: bold;
+      transition: 0.2s;
     }
 
     button:hover {
-      background: #2563eb;
-    }
-
-    button:disabled {
-      background: #94a3b8;
+      background: #1d4ed8;
     }
 
     #msg {
-      margin-top: 12px;
       font-size: 13px;
       color: red;
-    }
-
-    .small {
-      font-size: 12px;
-      color: #64748b;
       margin-top: 10px;
     }
+
+    .footer {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    @media(max-width: 900px){
+      .left { display:none; }
+      .right { flex: 1; }
+    }
+
   </style>
 </head>
 
 <body>
 
-<div class="box">
+<!-- LEFT -->
+<div class="left">
+  <h1>🚀 Y1CRM</h1>
+  <p>
+    Manage leads, sales pipeline, and close deals faster.<br>
+    A lightweight SaaS CRM built for modern teams.
+  </p>
 
-  <div class="logo">🚀 Y1CRM</div>
+  <div class="badge">⚡ Real-time CRM • SaaS Ready • Multi-user</div>
+</div>
 
-  <h3>Login</h3>
+<!-- RIGHT -->
+<div class="right">
+  <div class="card">
 
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
+    <div class="logo">Login to your account</div>
 
-  <button id="btn" onclick="login()">Login</button>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
 
-  <p id="msg"></p>
+    <button id="btn" onclick="login()">Sign in</button>
 
-  <div class="small">Secure SaaS CRM Platform</div>
+    <div id="msg"></div>
+
+    <div class="footer">
+      Powered by Y1CRM SaaS Engine
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -107,12 +166,12 @@ function login() {
   msg.innerText = "";
 
   if (!email || !password) {
-    msg.innerText = "⚠️ Please fill all fields";
+    msg.innerText = "Enter email & password";
     return;
   }
 
   btn.disabled = true;
-  btn.innerText = "Logging in...";
+  btn.innerText = "Signing in...";
 
   fetch(API + "/login", {
     method: "POST",
@@ -121,7 +180,7 @@ function login() {
   })
   .then(async res => {
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Login failed");
+    if (!res.ok) throw new Error(data.message);
     return data;
   })
   .then(data => {
@@ -135,7 +194,7 @@ function login() {
   })
   .finally(() => {
     btn.disabled = false;
-    btn.innerText = "Login";
+    btn.innerText = "Sign in";
   });
 }
 </script>
