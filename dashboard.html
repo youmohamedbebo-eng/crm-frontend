@@ -1,29 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CRM SaaS Dashboard</title>
+  <title>CRM SaaS Pro</title>
 
   <style>
-    .column{
-      flex:1;
-      min-height:400px;
-      background:#f7f7f7;
-      padding:10px;
-      border-radius:10px;
+    body {
+      font-family: Arial;
+      margin: 0;
+      background: #f4f6f9;
     }
 
-    .card{
-      background:#fff;
-      padding:10px;
-      margin:8px;
-      border-radius:8px;
-      cursor:grab;
-      box-shadow:0 2px 5px rgba(0,0,0,0.1);
-      font-size:14px;
+    header {
+      background: #111827;
+      color: white;
+      padding: 15px;
+      font-size: 18px;
     }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+    }
+
+    .card {
+      flex: 1;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .board {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+      overflow-x: auto;
+    }
+
+    .column {
+      min-width: 250px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      height: 70vh;
+      overflow-y: auto;
+    }
+
+    .lead {
+      background: #f9fafb;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+    }
+
   </style>
 </head>
+
 <body>
+
+<header>🚀 CRM SaaS Pro Max</header>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="card">Total <div id="total">0</div></div>
+  <div class="card">Interested <div id="interested">0</div></div>
+  <div class="card">Closed <div id="closed">0</div></div>
+</div>
+
+<!-- ADD LEAD -->
+<div style="padding:15px;">
+  <h3>Add Lead ➕</h3>
+  <input id="name" placeholder="Name">
+  <input id="phone" placeholder="Phone">
+  <button onclick="addLead()">Add</button>
+</div>
+
+<!-- PIPELINE -->
+<div class="board">
+
+  <div class="column">
+    <h3>New</h3>
+    <div id="New"></div>
+  </div>
+
+  <div class="column">
+    <h3>Contacted</h3>
+    <div id="Contacted"></div>
+  </div>
+
+  <div class="column">
+    <h3>Interested</h3>
+    <div id="Interested"></div>
+  </div>
+
+  <div class="column">
+    <h3>Not Interested</h3>
+    <div id="Not Interested"></div>
+  </div>
+
+  <div class="column">
+    <h3>Closed Won</h3>
+    <div id="Closed Won"></div>
+  </div>
+
+</div>
 
 <script>
 let user = JSON.parse(localStorage.getItem("user"));
@@ -32,186 +131,101 @@ let token = localStorage.getItem("token");
 if (!user || !token) {
   window.location.href = "index.html";
 }
-</script>
 
-<h1>🚀 CRM SaaS Pipeline</h1>
+const API = "https://crm-backend-svnl.onrender.com";
 
-<!-- 🟢 STATS -->
-<div style="display:flex; gap:15px; margin-bottom:20px;">
-  <div id="total">Total: 0</div>
-  <div id="new">New: 0</div>
-  <div id="hot">Interested: 0</div>
-  <div id="won">Closed: 0</div>
-</div>
-
-<hr>
-
-<!-- 🟢 ADD LEAD -->
-<h2>➕ Add Lead</h2>
-
-<input id="name" placeholder="Name"><br><br>
-<input id="phone" placeholder="Phone"><br><br>
-
-<button onclick="addLead()">Add Lead</button>
-
-<p id="msg"></p>
-
-<hr>
-
-<!-- 🟢 KANBAN -->
-<div style="display:flex; gap:10px;">
-
-  <div class="column" ondrop="drop(event,'New')" ondragover="allowDrop(event)">
-    <h3>🆕 New</h3>
-    <div id="New"></div>
-  </div>
-
-  <div class="column" ondrop="drop(event,'Contacted')" ondragover="allowDrop(event)">
-    <h3>📞 Contacted</h3>
-    <div id="Contacted"></div>
-  </div>
-
-  <div class="column" ondrop="drop(event,'Interested')" ondragover="allowDrop(event)">
-    <h3>🔥 Interested</h3>
-    <div id="Interested"></div>
-  </div>
-
-  <div class="column" ondrop="drop(event,'Not Interested')" ondragover="allowDrop(event)">
-    <h3>❌ Not Interested</h3>
-    <div id="Not Interested"></div>
-  </div>
-
-  <div class="column" ondrop="drop(event,'Closed Won')" ondragover="allowDrop(event)">
-    <h3>🏆 Closed Won</h3>
-    <div id="Closed Won"></div>
-  </div>
-
-</div>
-
-<script>
-
-/* =======================
-   LOAD LEADS
-======================= */
+/* ================= LOAD ================= */
 function loadLeads() {
-  fetch("https://crm-backend-svnl.onrender.com/leads", {
-    headers: { "Authorization": token }
+  fetch(API + "/leads", {
+    headers: { Authorization: token }
   })
   .then(res => res.json())
   .then(data => {
 
     // reset
-    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
+    ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s => {
       document.getElementById(s).innerHTML = "";
     });
 
     // stats
-    document.getElementById("total").innerText = "Total: " + data.length;
-    document.getElementById("new").innerText = "New: " + data.filter(l=>l.status==="New").length;
-    document.getElementById("hot").innerText = "Interested: " + data.filter(l=>l.status==="Interested").length;
-    document.getElementById("won").innerText = "Closed: " + data.filter(l=>l.status==="Closed Won").length;
+    document.getElementById("total").innerText = data.length;
+    document.getElementById("interested").innerText = data.filter(l=>l.status==="Interested").length;
+    document.getElementById("closed").innerText = data.filter(l=>l.status==="Closed Won").length;
 
     data.forEach(l => {
 
-      const card = `
-        <div class="card"
-          draggable="true"
-          ondragstart="drag(event)"
-          data-id="${l._id}">
+      const el = document.createElement("div");
+      el.className = "lead";
 
-          <b>${l.name}</b><br>
-          📞 ${l.phone}<br><br>
+      el.innerHTML = `
+        <b>${l.name}</b><br>
+        📞 ${l.phone}<br>
 
-          <input id="note-${l._id}" placeholder="Add note">
-          <button onclick="addNote('${l._id}')">💾</button>
+        <select onchange="updateStatus('${l._id}', this.value)">
+          <option ${l.status==="New"?"selected":""}>New</option>
+          <option ${l.status==="Contacted"?"selected":""}>Contacted</option>
+          <option ${l.status==="Interested"?"selected":""}>Interested</option>
+          <option ${l.status==="Not Interested"?"selected":""}>Not Interested</option>
+          <option ${l.status==="Closed Won"?"selected":""}>Closed Won</option>
+        </select>
 
-          <div style="font-size:12px;margin-top:5px;">
-            ${l.notes?.map(n=>"📝 "+n.text).join("<br>") || ""}
-          </div>
+        <input id="note-${l._id}" placeholder="Add note">
+        <button onclick="addNote('${l._id}')">Save Note</button>
 
-          <br>
-          <button onclick="deleteLead('${l._id}')">❌ Delete</button>
+        <div style="font-size:12px">
+          ${(l.notes||[]).map(n=>"📝 "+n.text).join("<br>")}
         </div>
       `;
 
-      if(document.getElementById(l.status)){
-        document.getElementById(l.status).innerHTML += card;
-      }
-
+      const col = document.getElementById(l.status);
+      if (col) col.appendChild(el);
     });
 
   });
 }
 
-/* =======================
-   ADD LEAD
-======================= */
+/* ================= ADD ================= */
 function addLead() {
-  fetch("https://crm-backend-svnl.onrender.com/leads", {
-    method:"POST",
-    headers:{
+  fetch(API + "/leads", {
+    method: "POST",
+    headers: {
       "Content-Type":"application/json",
-      "Authorization":token
+      Authorization: token
     },
-    body:JSON.stringify({
-      name:name.value,
-      phone:phone.value,
-      status:"New"
+    body: JSON.stringify({
+      name: name.value,
+      phone: phone.value
     })
-  }).then(()=>{ msg.innerText="✔ Added"; loadLeads(); });
+  }).then(loadLeads);
 }
 
-/* =======================
-   DRAG & DROP
-======================= */
-function drag(ev){
-  ev.dataTransfer.setData("id", ev.target.dataset.id);
-}
-
-function allowDrop(ev){
-  ev.preventDefault();
-}
-
-function drop(ev,status){
-  ev.preventDefault();
-  let id = ev.dataTransfer.getData("id");
-
-  fetch("https://crm-backend-svnl.onrender.com/leads/"+id,{
-    method:"PUT",
-    headers:{
+/* ================= STATUS ================= */
+function updateStatus(id, status) {
+  fetch(API + "/leads/" + id, {
+    method: "PUT",
+    headers: {
       "Content-Type":"application/json",
-      "Authorization":token
+      Authorization: token
     },
-    body:JSON.stringify({status})
+    body: JSON.stringify({ status })
   }).then(loadLeads);
 }
 
-/* =======================
-   DELETE
-======================= */
-function deleteLead(id){
-  fetch("https://crm-backend-svnl.onrender.com/leads/"+id,{
-    method:"DELETE",
-    headers:{ "Authorization":token }
-  }).then(loadLeads);
-}
-
-/* =======================
-   ADD NOTE
-======================= */
-function addNote(id){
-  let text=document.getElementById("note-"+id).value;
-
-  fetch("https://crm-backend-svnl.onrender.com/leads/"+id+"/note",{
-    method:"PUT",
-    headers:{
+/* ================= NOTE ================= */
+function addNote(id) {
+  fetch(API + "/leads/" + id + "/note", {
+    method: "PUT",
+    headers: {
       "Content-Type":"application/json",
-      "Authorization":token
+      Authorization: token
     },
-    body:JSON.stringify({text})
+    body: JSON.stringify({
+      text: document.getElementById("note-"+id).value
+    })
   }).then(loadLeads);
 }
 
+loadLeads();
 </script>
 
 </body>
