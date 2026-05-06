@@ -9,8 +9,10 @@
 let user = JSON.parse(localStorage.getItem("user"));
 let token = localStorage.getItem("token");
 
-// لو مفيش login
-if (!user || !token) window.location.href = "index.html";
+// حماية الدخول
+if (!user || !token) {
+  window.location.href = "index.html";
+}
 </script>
 
 <h1>CRM Leads 🚀</h1>
@@ -50,12 +52,15 @@ if (!user || !token) window.location.href = "index.html";
 ======================= */
 function loadLeads() {
   fetch("https://crm-backend-svnl.onrender.com/leads", {
+    method: "GET",
     headers: {
       "Authorization": token
     }
   })
   .then(res => {
-    if (!res.ok) throw new Error("Unauthorized");
+    if (res.status === 401) {
+      throw new Error("Unauthorized");
+    }
     return res.json();
   })
   .then(data => {
@@ -79,6 +84,7 @@ function loadLeads() {
   })
   .catch(() => {
     alert("Session expired, please login again");
+    localStorage.clear();
     window.location.href = "index.html";
   });
 }
@@ -102,6 +108,10 @@ function addLead() {
   .then(res => res.json())
   .then(() => {
     document.getElementById("msg").innerText = "✔ Lead Added Successfully";
+
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+
     loadLeads();
   })
   .catch(() => {
