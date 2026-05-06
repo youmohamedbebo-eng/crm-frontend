@@ -71,7 +71,6 @@
       padding: 5px;
       margin-top: 5px;
     }
-
   </style>
 </head>
 
@@ -97,34 +96,18 @@
 <!-- PIPELINE -->
 <div class="board">
 
-  <div class="column">
-    <h3>New</h3>
-    <div id="New"></div>
-  </div>
-
-  <div class="column">
-    <h3>Contacted</h3>
-    <div id="Contacted"></div>
-  </div>
-
-  <div class="column">
-    <h3>Interested</h3>
-    <div id="Interested"></div>
-  </div>
-
-  <div class="column">
-    <h3>Not Interested</h3>
-    <div id="Not Interested"></div>
-  </div>
-
-  <div class="column">
-    <h3>Closed Won</h3>
-    <div id="Closed Won"></div>
-  </div>
+  <div class="column"><h3>New</h3><div id="New"></div></div>
+  <div class="column"><h3>Contacted</h3><div id="Contacted"></div></div>
+  <div class="column"><h3>Interested</h3><div id="Interested"></div></div>
+  <div class="column"><h3>Not Interested</h3><div id="Not Interested"></div></div>
+  <div class="column"><h3>Closed Won</h3><div id="Closed Won"></div></div>
 
 </div>
 
 <script>
+
+const API = "https://crm-backend-svnl.onrender.com";
+
 let user = JSON.parse(localStorage.getItem("user"));
 let token = localStorage.getItem("token");
 
@@ -132,9 +115,7 @@ if (!user || !token) {
   window.location.href = "index.html";
 }
 
-const API = "https://crm-backend-svnl.onrender.com";
-
-/* ================= LOAD ================= */
+/* ================= LOAD LEADS ================= */
 function loadLeads() {
   fetch(API + "/leads", {
     headers: { Authorization: token }
@@ -142,61 +123,77 @@ function loadLeads() {
   .then(res => res.json())
   .then(data => {
 
-    // reset
+    // reset columns safely
     ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s => {
-      document.getElementById(s).innerHTML = "";
+      const el = document.getElementById(s);
+      if (el) el.innerHTML = "";
     });
 
     // stats
     document.getElementById("total").innerText = data.length;
-    document.getElementById("interested").innerText = data.filter(l=>l.status==="Interested").length;
-    document.getElementById("closed").innerText = data.filter(l=>l.status==="Closed Won").length;
+    document.getElementById("interested").innerText =
+      data.filter(l => l.status === "Interested").length;
+
+    document.getElementById("closed").innerText =
+      data.filter(l => l.status === "Closed Won").length;
 
     data.forEach(l => {
+
+      const status = l.status || "New";
+      const col = document.getElementById(status);
+
+      if (!col) return;
 
       const el = document.createElement("div");
       el.className = "lead";
 
       el.innerHTML = `
-        <b>${l.name}</b><br>
-        📞 ${l.phone}<br>
+        <b>${l.name || "-"}</b><br>
+        📞 ${l.phone || "-"}<br>
 
         <select onchange="updateStatus('${l._id}', this.value)">
-          <option ${l.status==="New"?"selected":""}>New</option>
-          <option ${l.status==="Contacted"?"selected":""}>Contacted</option>
-          <option ${l.status==="Interested"?"selected":""}>Interested</option>
-          <option ${l.status==="Not Interested"?"selected":""}>Not Interested</option>
-          <option ${l.status==="Closed Won"?"selected":""}>Closed Won</option>
+          <option ${status==="New"?"selected":""}>New</option>
+          <option ${status==="Contacted"?"selected":""}>Contacted</option>
+          <option ${status==="Interested"?"selected":""}>Interested</option>
+          <option ${status==="Not Interested"?"selected":""}>Not Interested</option>
+          <option ${status==="Closed Won"?"selected":""}>Closed Won</option>
         </select>
 
         <input id="note-${l._id}" placeholder="Add note">
         <button onclick="addNote('${l._id}')">Save Note</button>
 
         <div style="font-size:12px">
-          ${(l.notes||[]).map(n=>"📝 "+n.text).join("<br>")}
+          ${(l.notes || []).map(n => "📝 " + n.text).join("<br>")}
         </div>
       `;
 
-      const col = document.getElementById(l.status);
-      if (col) col.appendChild(el);
+      col.appendChild(el);
     });
 
   });
 }
 
-/* ================= ADD ================= */
+/* ================= ADD LEAD ================= */
 function addLead() {
+
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+
+  if (!name || !phone) return;
+
   fetch(API + "/leads", {
     method: "POST",
     headers: {
-      "Content-Type":"application/json",
+      "Content-Type": "application/json",
       Authorization: token
     },
-    body: JSON.stringify({
-      name: name.value,
-      phone: phone.value
-    })
-  }).then(loadLeads);
+    body: JSON.stringify({ name, phone })
+  })
+  .then(() => {
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    loadLeads();
+  });
 }
 
 /* ================= STATUS ================= */
@@ -204,7 +201,7 @@ function updateStatus(id, status) {
   fetch(API + "/leads/" + id, {
     method: "PUT",
     headers: {
-      "Content-Type":"application/json",
+      "Content-Type": "application/json",
       Authorization: token
     },
     body: JSON.stringify({ status })
@@ -213,19 +210,25 @@ function updateStatus(id, status) {
 
 /* ================= NOTE ================= */
 function addNote(id) {
+  const input = document.getElementById("note-" + id);
+
+  if (!input.value) return;
+
   fetch(API + "/leads/" + id + "/note", {
     method: "PUT",
     headers: {
-      "Content-Type":"application/json",
+      "Content-Type": "application/json",
       Authorization: token
     },
-    body: JSON.stringify({
-      text: document.getElementById("note-"+id).value
-    })
-  }).then(loadLeads);
+    body: JSON.stringify({ text: input.value })
+  }).then(() => {
+    input.value = "";
+    loadLeads();
+  });
 }
 
-loadLeads();
+window.onload = loadLeads;
+
 </script>
 
 </body>
