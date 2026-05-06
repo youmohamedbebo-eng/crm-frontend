@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Y1CRM Auth</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial;
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#f4f6fb;
+    }
+
+    .box{
+      width:350px;
+      background:white;
+      padding:25px;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    input{
+      width:100%;
+      padding:10px;
+      margin:6px 0;
+      border:1px solid #ddd;
+      border-radius:8px;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
+      border:none;
+      background:#2563eb;
+      color:white;
+      border-radius:8px;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    .tabs{
+      display:flex;
+      margin-bottom:10px;
+      gap:5px;
+    }
+
+    .tab{
+      flex:1;
+      padding:8px;
+      text-align:center;
+      cursor:pointer;
+      border-radius:8px;
+      background:#eee;
+    }
+
+    .active{
+      background:#2563eb;
+      color:white;
+    }
+
+    #msg{
+      font-size:13px;
+      color:red;
+      margin-top:8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h2>🚀 Y1CRM</h2>
+
+  <div class="tabs">
+    <div class="tab active" onclick="show('login')">Login</div>
+    <div class="tab" onclick="show('register')">Register</div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginBox">
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div id="registerBox" style="display:none;">
+    <input id="name" placeholder="Name">
+    <input id="email" placeholder="Email">
+    <input id="pass" type="password" placeholder="Password">
+
+    <!-- SaaS IMPORTANT -->
+    <input id="company" placeholder="Company ID">
+
+    <button onclick="register()">Create Account</button>
+  </div>
+
+  <div id="msg"></div>
+
+</div>
+
+<script>
+
+const API = "https://crm-backend-svnl.onrender.com";
+
+function show(type){
+  document.getElementById("loginBox").style.display = type==="login"?"block":"none";
+  document.getElementById("registerBox").style.display = type==="register"?"block":"none";
+}
+
+/* LOGIN */
+function login(){
+  fetch(API+"/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      email:loginEmail.value,
+      password:loginPass.value
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    localStorage.setItem("token",d.token);
+    localStorage.setItem("user",JSON.stringify(d.user));
+    location.href="dashboard.html";
+  })
+  .catch(()=>msg.innerText="Login failed");
+}
+
+/* REGISTER */
+function register(){
+  fetch(API+"/register",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name:name.value,
+      email:email.value,
+      password:pass.value,
+      companyId:company.value,
+      role:"sales",
+      plan:"free"
+    })
+  })
+  .then(r=>r.json())
+  .then(()=>{
+    msg.innerText="Account created, now login";
+    show("login");
+  });
+}
+
+</script>
+
+</body>
+</html>
