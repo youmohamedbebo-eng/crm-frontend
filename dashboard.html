@@ -47,15 +47,18 @@ function loadLeads() {
   .then(res => res.json())
   .then(data => {
     let rows = "";
+
     data.forEach(l => {
       rows += `
         <tr>
           <td>${l.name || "-"}</td>
           <td>${l.phone || "-"}</td>
           <td>${l.status || "-"}</td>
+          <td><button onclick="deleteLead('${l._id}')">Delete ❌</button></td>
         </tr>
       `;
     });
+
     document.getElementById("data").innerHTML = rows;
   });
 }
