@@ -16,7 +16,17 @@ if (!user || !token) {
 
 <h1>CRM Leads 🚀</h1>
 
-<!-- 🟢 Add Lead -->
+<!-- 🟢 STATS -->
+<div style="display:flex; gap:10px; margin-bottom:15px;">
+  <div id="total">Total: 0</div>
+  <div id="new">New: 0</div>
+  <div id="interested">Interested: 0</div>
+  <div id="done">Closed: 0</div>
+</div>
+
+<hr>
+
+<!-- 🟢 ADD LEAD -->
 <h2>Add Lead ➕</h2>
 
 <input id="name" placeholder="Name"><br><br>
@@ -28,7 +38,7 @@ if (!user || !token) {
 
 <hr>
 
-<!-- 🟢 Load Leads -->
+<!-- 🟢 LOAD -->
 <button onclick="loadLeads()">Load Leads</button>
 
 <table border="1">
@@ -37,6 +47,7 @@ if (!user || !token) {
       <th>Name</th>
       <th>Phone</th>
       <th>Status</th>
+      <th>Notes</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -51,16 +62,16 @@ if (!user || !token) {
 ======================= */
 function loadLeads() {
   fetch("https://crm-backend-svnl.onrender.com/leads", {
-    method: "GET",
-    headers: {
-      "Authorization": token
-    }
+    headers: { "Authorization": token }
   })
-  .then(res => {
-    if (res.status === 401) throw new Error("Unauthorized");
-    return res.json();
-  })
+  .then(res => res.json())
   .then(data => {
+
+    // 🔥 STATS
+    document.getElementById("total").innerText = "Total: " + data.length;
+    document.getElementById("new").innerText = "New: " + data.filter(l => l.status === "New").length;
+    document.getElementById("interested").innerText = "Interested: " + data.filter(l => l.status === "Interested").length;
+    document.getElementById("done").innerText = "Closed: " + data.filter(l => l.status === "Closed Won").length;
 
     let rows = "";
 
@@ -70,7 +81,7 @@ function loadLeads() {
           <td>${l.name || "-"}</td>
           <td>${l.phone || "-"}</td>
 
-          <!-- 🟢 STATUS DROPDOWN -->
+          <!-- STATUS -->
           <td>
             <select onchange="updateStatus('${l._id}', this.value)">
               <option value="New" ${l.status === "New" ? "selected" : ""}>New</option>
@@ -82,19 +93,25 @@ function loadLeads() {
             </select>
           </td>
 
+          <!-- 🟢 NOTES -->
           <td>
-            <button onclick="deleteLead('${l._id}')">❌ Delete</button>
+            <input id="note-${l._id}" placeholder="Add note">
+            <button onclick="addNote('${l._id}')">Save</button>
+
+            <div style="font-size:12px; margin-top:5px;">
+              ${l.notes?.map(n => "📝 " + n.text).join("<br>") || ""}
+            </div>
+          </td>
+
+          <!-- ACTIONS -->
+          <td>
+            <button onclick="deleteLead('${l._id}')">❌</button>
           </td>
         </tr>
       `;
     });
 
     document.getElementById("data").innerHTML = rows;
-  })
-  .catch(() => {
-    alert("Session expired, please login again");
-    localStorage.clear();
-    window.location.href = "index.html";
   });
 }
 
@@ -109,30 +126,24 @@ function addLead() {
       "Authorization": token
     },
     body: JSON.stringify({
-      name: document.getElementById("name").value,
-      phone: document.getElementById("phone").value,
+      name: name.value,
+      phone: phone.value,
       status: "New"
     })
   })
   .then(() => {
-    document.getElementById("msg").innerText = "✔ Lead Added Successfully";
-
-    name.value = "";
-    phone.value = "";
-
+    msg.innerText = "✔ Added";
     loadLeads();
   });
 }
 
 /* =======================
-   DELETE LEAD
+   DELETE
 ======================= */
 function deleteLead(id) {
   fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
     method: "DELETE",
-    headers: {
-      "Authorization": token
-    }
+    headers: { "Authorization": token }
   }).then(loadLeads);
 }
 
@@ -147,6 +158,22 @@ function updateStatus(id, status) {
       "Authorization": token
     },
     body: JSON.stringify({ status })
+  }).then(loadLeads);
+}
+
+/* =======================
+   ADD NOTE
+======================= */
+function addNote(id) {
+  let text = document.getElementById("note-" + id).value;
+
+  fetch("https://crm-backend-svnl.onrender.com/leads/" + id + "/note", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": token
+    },
+    body: JSON.stringify({ text })
   }).then(loadLeads);
 }
 
