@@ -4,6 +4,7 @@
   <title>Y1CRM Dashboard</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     * {
@@ -18,6 +19,7 @@
       height: 100vh;
     }
 
+    /* SIDEBAR */
     .sidebar {
       width: 240px;
       background: #0f172a;
@@ -39,10 +41,12 @@
       background: rgba(255,255,255,0.05);
     }
 
+    /* MAIN */
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     .topbar {
@@ -63,6 +67,7 @@
       cursor: pointer;
     }
 
+    /* STATS */
     .stats {
       display: grid;
       grid-template-columns: repeat(4,1fr);
@@ -83,6 +88,7 @@
       margin-top: 5px;
     }
 
+    /* ADD */
     .add-box {
       padding: 0 20px;
     }
@@ -95,6 +101,12 @@
       border: 1px solid #e2e8f0;
     }
 
+    /* CHART */
+    .chart-box {
+      padding: 20px;
+    }
+
+    /* PIPELINE */
     .board {
       display: flex;
       gap: 10px;
@@ -107,7 +119,7 @@
       background: white;
       border-radius: 12px;
       padding: 10px;
-      height: 65vh;
+      height: 55vh;
       overflow-y: auto;
     }
 
@@ -119,6 +131,11 @@
       border-left: 4px solid #3b82f6;
       font-size: 13px;
       cursor: grab;
+      transition: 0.2s;
+    }
+
+    .lead:hover {
+      transform: scale(1.02);
     }
 
     .small {
@@ -127,7 +144,8 @@
     }
 
     .col.dragover {
-      background: #e0f2fe;
+      background: #e0f2fe !important;
+      transition: 0.2s;
     }
   </style>
 </head>
@@ -153,6 +171,7 @@
     <button onclick="logout()">Logout</button>
   </div>
 
+  <!-- STATS -->
   <div class="stats">
     <div class="card">Total <div class="num" id="total">0</div></div>
     <div class="card">New <div class="num" id="new">0</div></div>
@@ -160,6 +179,12 @@
     <div class="card">Closed <div class="num" id="closed">0</div></div>
   </div>
 
+  <!-- CHART -->
+  <div class="chart-box">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <!-- ADD -->
   <div class="add-box">
     <h3>Add Lead ➕</h3>
     <input id="name" placeholder="Name">
@@ -227,13 +252,28 @@ function loadLeads() {
     document.getElementById("hot").innerText = data.filter(l=>l.status==="Interested").length;
     document.getElementById("closed").innerText = data.filter(l=>l.status==="Closed Won").length;
 
+    // CHART
+    new Chart(document.getElementById("chart"), {
+      type: "doughnut",
+      data: {
+        labels: ["New","Interested","Closed"],
+        datasets: [{
+          data: [
+            data.filter(l=>l.status==="New").length,
+            data.filter(l=>l.status==="Interested").length,
+            data.filter(l=>l.status==="Closed Won").length
+          ]
+        }]
+      }
+    });
+
     data.forEach(l => {
 
       const div = document.createElement("div");
       div.className = "lead";
       div.draggable = true;
 
-      div.ondragstart = (e) => {
+      div.ondragstart = (e)=>{
         e.dataTransfer.setData("id", l._id);
       };
 
@@ -244,7 +284,7 @@ function loadLeads() {
       `;
 
       const col = document.getElementById(l.status);
-      if (col) col.appendChild(div);
+      if(col) col.appendChild(div);
 
     });
 
@@ -266,7 +306,7 @@ function addLead(){
   }).then(()=>loadLeads());
 }
 
-/* DRAG & DROP */
+/* DRAG */
 function allowDrop(ev){
   ev.preventDefault();
 }
@@ -276,13 +316,13 @@ function drop(ev, status){
 
   const id = ev.dataTransfer.getData("id");
 
-  fetch(API + "/leads/" + id, {
-    method: "PUT",
-    headers: {
+  fetch(API+"/leads/"+id,{
+    method:"PUT",
+    headers:{
       "Content-Type":"application/json",
-      Authorization: token
+      Authorization:token
     },
-    body: JSON.stringify({ status })
+    body:JSON.stringify({status})
   }).then(()=>loadLeads());
 }
 
