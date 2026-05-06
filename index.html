@@ -30,8 +30,12 @@ function login() {
     if (!res.ok) throw new Error("fail");
     return res.json();
   })
-  .then(user => {
-    localStorage.setItem("user", JSON.stringify(user));
+  .then(data => {
+    // 🟢 حفظ user + token
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+
+    // 🟢 تحويل للداشبورد
     window.location.href = "dashboard.html";
   })
   .catch(() => {
