@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+<body>
+
+<script>
+let user = JSON.parse(localStorage.getItem("user"));
+if (!user) window.location.href = "index.html";
+</script>
+
+<h1>CRM Leads 🚀</h1>
+
+<button onclick="loadLeads()">Load Leads</button>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="data"></tbody>
+</table>
+
+<script>
+function loadLeads() {
+  fetch("https://crm-backend-svnl.onrender.com/leads?user=" + user.email)
+  .then(res => res.json())
+  .then(data => {
+    let rows = "";
+    data.forEach(l => {
+      rows += `
+        <tr>
+          <td>${l.name || "-"}</td>
+          <td>${l.phone || "-"}</td>
+          <td>${l.status}</td>
+        </tr>
+      `;
+    });
+    document.getElementById("data").innerHTML = rows;
+  });
+}
+</script>
+
+</body>
+</html>
