@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CRM Dashboard</title>
+</head>
+<body>
+
+<h1>CRM Leads Dashboard 🚀</h1>
+
+<button onclick="loadData()">Load Leads</button>
+
+<table border="1" style="margin-top:20px;">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="data"></tbody>
+</table>
+
+<script>
+function loadData() {
+  fetch("https://crm-backend-svnl.onrender.com/leads")
+  .then(res => res.json())
+  .then(data => {
+    let rows = "";
+    data.forEach(lead => {
+      rows += `
+        <tr>
+          <td>${lead.name || "-"}</td>
+          <td>${lead.phone || "-"}</td>
+          <td>${lead.status}</td>
+        </tr>
+      `;
+    });
+    document.getElementById("data").innerHTML = rows;
+  });
+}
+</script>
+
+</body>
+</html>
