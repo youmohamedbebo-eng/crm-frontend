@@ -12,7 +12,7 @@ if (!user) window.location.href = "index.html";
 
 <h1>CRM Leads 🚀</h1>
 
-<!-- 🟢 Add Lead Form -->
+<!-- 🟢 Add Lead -->
 <h2>Add Lead ➕</h2>
 
 <input id="name" placeholder="Name"><br><br>
@@ -33,12 +33,15 @@ if (!user) window.location.href = "index.html";
       <th>Name</th>
       <th>Phone</th>
       <th>Status</th>
+      <th>Actions</th>
     </tr>
   </thead>
+
   <tbody id="data"></tbody>
 </table>
 
 <script>
+
 /* =======================
    LOAD LEADS
 ======================= */
@@ -54,7 +57,10 @@ function loadLeads() {
           <td>${l.name || "-"}</td>
           <td>${l.phone || "-"}</td>
           <td>${l.status || "-"}</td>
-          <td><button onclick="deleteLead('${l._id}')">Delete ❌</button></td>
+          <td>
+            <button onclick="deleteLead('${l._id}')">Delete ❌</button>
+            <button onclick="markDone('${l._id}')">Done ✔</button>
+          </td>
         </tr>
       `;
     });
@@ -82,14 +88,39 @@ function addLead() {
   .then(res => res.json())
   .then(() => {
     document.getElementById("msg").innerText = "✔ Lead Added Successfully";
-
-    // refresh list automatically
     loadLeads();
   })
   .catch(() => {
     document.getElementById("msg").innerText = "❌ Error adding lead";
   });
 }
+
+/* =======================
+   DELETE LEAD
+======================= */
+function deleteLead(id) {
+  fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
+    method: "DELETE"
+  })
+  .then(() => loadLeads());
+}
+
+/* =======================
+   MARK AS DONE
+======================= */
+function markDone(id) {
+  fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      status: "Done"
+    })
+  })
+  .then(() => loadLeads());
+}
+
 </script>
 
 </body>
