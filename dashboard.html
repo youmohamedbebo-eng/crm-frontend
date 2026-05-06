@@ -7,7 +7,10 @@
 
 <script>
 let user = JSON.parse(localStorage.getItem("user"));
-if (!user) window.location.href = "index.html";
+let token = localStorage.getItem("token");
+
+// لو مفيش login
+if (!user || !token) window.location.href = "index.html";
 </script>
 
 <h1>CRM Leads 🚀</h1>
@@ -46,8 +49,15 @@ if (!user) window.location.href = "index.html";
    LOAD LEADS
 ======================= */
 function loadLeads() {
-  fetch("https://crm-backend-svnl.onrender.com/leads?user=" + user.email)
-  .then(res => res.json())
+  fetch("https://crm-backend-svnl.onrender.com/leads", {
+    headers: {
+      "Authorization": token
+    }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Unauthorized");
+    return res.json();
+  })
   .then(data => {
     let rows = "";
 
@@ -66,6 +76,10 @@ function loadLeads() {
     });
 
     document.getElementById("data").innerHTML = rows;
+  })
+  .catch(() => {
+    alert("Session expired, please login again");
+    window.location.href = "index.html";
   });
 }
 
@@ -76,13 +90,13 @@ function addLead() {
   fetch("https://crm-backend-svnl.onrender.com/leads", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Authorization": token
     },
     body: JSON.stringify({
       name: document.getElementById("name").value,
       phone: document.getElementById("phone").value,
-      status: "New",
-      assignedTo: user.email
+      status: "New"
     })
   })
   .then(res => res.json())
@@ -100,7 +114,10 @@ function addLead() {
 ======================= */
 function deleteLead(id) {
   fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: {
+      "Authorization": token
+    }
   })
   .then(() => loadLeads());
 }
@@ -112,7 +129,8 @@ function markDone(id) {
   fetch("https://crm-backend-svnl.onrender.com/leads/" + id, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Authorization": token
     },
     body: JSON.stringify({
       status: "Done"
