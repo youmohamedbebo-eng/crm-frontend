@@ -18,7 +18,6 @@
       height: 100vh;
     }
 
-    /* SIDEBAR */
     .sidebar {
       width: 240px;
       background: #0f172a;
@@ -40,14 +39,12 @@
       background: rgba(255,255,255,0.05);
     }
 
-    /* MAIN */
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
     }
 
-    /* TOP */
     .topbar {
       background: white;
       padding: 15px 20px;
@@ -66,7 +63,6 @@
       cursor: pointer;
     }
 
-    /* STATS */
     .stats {
       display: grid;
       grid-template-columns: repeat(4,1fr);
@@ -87,7 +83,6 @@
       margin-top: 5px;
     }
 
-    /* ADD LEAD */
     .add-box {
       padding: 0 20px;
     }
@@ -100,7 +95,6 @@
       border: 1px solid #e2e8f0;
     }
 
-    /* PIPELINE */
     .board {
       display: flex;
       gap: 10px;
@@ -124,11 +118,16 @@
       margin: 8px 0;
       border-left: 4px solid #3b82f6;
       font-size: 13px;
+      cursor: grab;
     }
 
     .small {
       font-size: 11px;
       color: #666;
+    }
+
+    .col.dragover {
+      background: #e0f2fe;
     }
   </style>
 </head>
@@ -138,7 +137,6 @@
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">🚀 Y1CRM</div>
-
   <div class="menu">
     <div>📊 Dashboard</div>
     <div>📁 Leads</div>
@@ -150,13 +148,11 @@
 <!-- MAIN -->
 <div class="main">
 
-  <!-- TOP -->
   <div class="topbar">
     <div>Welcome 👋 <span id="username"></span></div>
     <button onclick="logout()">Logout</button>
   </div>
 
-  <!-- STATS -->
   <div class="stats">
     <div class="card">Total <div class="num" id="total">0</div></div>
     <div class="card">New <div class="num" id="new">0</div></div>
@@ -164,7 +160,6 @@
     <div class="card">Closed <div class="num" id="closed">0</div></div>
   </div>
 
-  <!-- ADD -->
   <div class="add-box">
     <h3>Add Lead ➕</h3>
     <input id="name" placeholder="Name">
@@ -175,11 +170,25 @@
   <!-- PIPELINE -->
   <div class="board">
 
-    <div class="col"><h4>New</h4><div id="New"></div></div>
-    <div class="col"><h4>Contacted</h4><div id="Contacted"></div></div>
-    <div class="col"><h4>Interested</h4><div id="Interested"></div></div>
-    <div class="col"><h4>Not Interested</h4><div id="Not Interested"></div></div>
-    <div class="col"><h4>Closed Won</h4><div id="Closed Won"></div></div>
+    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'New')">
+      <h4>New</h4><div id="New"></div>
+    </div>
+
+    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Contacted')">
+      <h4>Contacted</h4><div id="Contacted"></div>
+    </div>
+
+    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Interested')">
+      <h4>Interested</h4><div id="Interested"></div>
+    </div>
+
+    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Not Interested')">
+      <h4>Not Interested</h4><div id="Not Interested"></div>
+    </div>
+
+    <div class="col" ondragover="allowDrop(event)" ondrop="drop(event,'Closed Won')">
+      <h4>Closed Won</h4><div id="Closed Won"></div>
+    </div>
 
   </div>
 
@@ -209,8 +218,6 @@ function loadLeads() {
   .then(r => r.json())
   .then(data => {
 
-    if (!Array.isArray(data)) return;
-
     ["New","Contacted","Interested","Not Interested","Closed Won"].forEach(s=>{
       document.getElementById(s).innerHTML = "";
     });
@@ -224,12 +231,16 @@ function loadLeads() {
 
       const div = document.createElement("div");
       div.className = "lead";
+      div.draggable = true;
+
+      div.ondragstart = (e) => {
+        e.dataTransfer.setData("id", l._id);
+      };
 
       div.innerHTML = `
-        <b>${l.name || ""}</b><br>
-        📞 ${l.phone || ""}<br>
-
-        <div class="small">Status: ${l.status}</div>
+        <b>${l.name}</b><br>
+        📞 ${l.phone}<br>
+        <div class="small">${l.status}</div>
       `;
 
       const col = document.getElementById(l.status);
@@ -237,8 +248,7 @@ function loadLeads() {
 
     });
 
-  })
-  .catch(err => console.log(err));
+  });
 }
 
 /* ADD */
@@ -253,6 +263,26 @@ function addLead(){
       name: document.getElementById("name").value,
       phone: document.getElementById("phone").value
     })
+  }).then(()=>loadLeads());
+}
+
+/* DRAG & DROP */
+function allowDrop(ev){
+  ev.preventDefault();
+}
+
+function drop(ev, status){
+  ev.preventDefault();
+
+  const id = ev.dataTransfer.getData("id");
+
+  fetch(API + "/leads/" + id, {
+    method: "PUT",
+    headers: {
+      "Content-Type":"application/json",
+      Authorization: token
+    },
+    body: JSON.stringify({ status })
   }).then(()=>loadLeads());
 }
 
